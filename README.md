@@ -145,3 +145,51 @@ tests/fakes.py          providers that fail, rate-limit, and cost money on deman
 ## License
 
 MIT
+
+---
+
+## Run it yourself
+
+```bash
+git clone https://github.com/hammas159/llm-gateway
+cd llm-gateway
+
+uv sync --all-groups     # or: pip install -e ".[dev]"
+make test                # 42 tests, no API key, no network, no model
+```
+
+Every test runs against fake providers, so a reviewer can verify the whole policy layer
+without an account anywhere. To route real traffic, add a provider:
+
+```bash
+ollama pull qwen2.5:3b-instruct       # local, free
+export ANTHROPIC_API_KEY=...          # optional, for the frontier tier
+```
+
+```python
+from gateway import Gateway, Request
+from gateway.providers.real import AnthropicProvider, OllamaProvider
+
+gateway = Gateway(providers=[OllamaProvider(), AnthropicProvider()])
+gateway.complete(Request(prompt="hi", tenant="acme"))            # -> local, $0.00
+gateway.complete(Request(prompt="Analyse this architecture..."))  # -> frontier
+gateway.stats()   # cost per model, cache hit rate, fallback rate
+```
+
+## Problems hit while building this
+
+**A tenant restricted to one model could not ask a hard question at all.** The router
+picked a difficulty tier, filtered its preferred models against the tenant's allowlist,
+found nothing, and raised. So a customer on a small-model plan got an error instead of
+an answer whenever their question looked complex.
+
+Both obvious fixes are wrong: refusing locks the tenant out of hard questions, and
+silently upgrading charges them for a model they never bought. *Fixed* by falling back
+to the best model the tenant **is** permitted, with the genuinely-unknown-model case
+still failing loudly. Both branches are now tests.
+
+**Semantic caching was rejected on purpose.** It was the obvious upgrade and it is a
+good way to serve a confidently wrong answer — *"is X safe for children"* and *"is X
+safe for adults"* embed almost identically and need opposite replies. The cache
+normalises whitespace and case only, and a cache hit is recorded at **zero cost**,
+because reporting the original price on a hit inflates every spend figure in the system.
