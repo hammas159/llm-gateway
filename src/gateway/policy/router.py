@@ -76,8 +76,9 @@ class Router:
         }
     )
 
-    def route(self, prompt: str, *, pinned: str | None = None,
-              allowed: frozenset[str] = frozenset()) -> Route:
+    def route(
+        self, prompt: str, *, pinned: str | None = None, allowed: frozenset[str] = frozenset()
+    ) -> Route:
         if pinned:
             # An explicit choice is honoured, but still gets a fallback chain: a
             # pinned model that is down should degrade, not fail.

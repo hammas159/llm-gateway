@@ -24,8 +24,11 @@ class OllamaProvider(Provider):
 
     name = "ollama"
 
-    def __init__(self, base_url: str = "http://localhost:11434",
-                 models: dict[str, tuple[float, float]] | None = None) -> None:
+    def __init__(
+        self,
+        base_url: str = "http://localhost:11434",
+        models: dict[str, tuple[float, float]] | None = None,
+    ) -> None:
         self.base_url = base_url.rstrip("/")
         self.models = models or {
             "qwen2.5:3b-instruct": (0.0, 0.0),
@@ -39,7 +42,9 @@ class OllamaProvider(Provider):
                 r = client.post(
                     f"{self.base_url}/api/generate",
                     json={
-                        "model": model, "prompt": req.prompt, "system": req.system,
+                        "model": model,
+                        "prompt": req.prompt,
+                        "system": req.system,
                         "stream": False,
                         "options": {"num_predict": req.max_tokens, "temperature": 0.0},
                     },
@@ -58,8 +63,9 @@ class OllamaProvider(Provider):
 class AnthropicProvider(Provider):
     name = "anthropic"
 
-    def __init__(self, api_key: str | None = None,
-                 models: dict[str, tuple[float, float]] | None = None) -> None:
+    def __init__(
+        self, api_key: str | None = None, models: dict[str, tuple[float, float]] | None = None
+    ) -> None:
         self.api_key = api_key or os.getenv("ANTHROPIC_API_KEY", "")
         self.models = models or {
             "claude-sonnet-5": (3.0, 15.0),
@@ -76,7 +82,9 @@ class AnthropicProvider(Provider):
 
         try:
             msg = Anthropic(api_key=self.api_key).messages.create(
-                model=model, max_tokens=req.max_tokens, temperature=0.0,
+                model=model,
+                max_tokens=req.max_tokens,
+                temperature=0.0,
                 system=req.system or "You are a helpful assistant.",
                 messages=[{"role": "user", "content": req.prompt}],
             )
@@ -89,8 +97,7 @@ class AnthropicProvider(Provider):
 
         return (
             "".join(b.text for b in msg.content if b.type == "text").strip(),
-            Usage(prompt_tokens=msg.usage.input_tokens,
-                  completion_tokens=msg.usage.output_tokens),
+            Usage(prompt_tokens=msg.usage.input_tokens, completion_tokens=msg.usage.output_tokens),
         )
 
 
@@ -99,9 +106,12 @@ class HuggingFaceProvider(Provider):
 
     name = "huggingface"
 
-    def __init__(self, token: str | None = None,
-                 base_url: str = "https://router.huggingface.co/v1",
-                 models: dict[str, tuple[float, float]] | None = None) -> None:
+    def __init__(
+        self,
+        token: str | None = None,
+        base_url: str = "https://router.huggingface.co/v1",
+        models: dict[str, tuple[float, float]] | None = None,
+    ) -> None:
         self.token = token or os.getenv("HF_TOKEN", "")
         self.base_url = base_url.rstrip("/")
         self.models = models or {"Qwen/Qwen2.5-7B-Instruct": (0.0, 0.0)}
@@ -119,8 +129,12 @@ class HuggingFaceProvider(Provider):
                 r = client.post(
                     f"{self.base_url}/chat/completions",
                     headers={"Authorization": f"Bearer {self.token}"},
-                    json={"model": model, "messages": messages,
-                          "max_tokens": req.max_tokens, "temperature": 0.0},
+                    json={
+                        "model": model,
+                        "messages": messages,
+                        "max_tokens": req.max_tokens,
+                        "temperature": 0.0,
+                    },
                 )
                 if r.status_code == 429:
                     raise RateLimited("huggingface: rate limited")

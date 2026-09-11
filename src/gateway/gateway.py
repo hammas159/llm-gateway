@@ -52,8 +52,13 @@ class Gateway:
         guard_in = check_input(req.prompt, redact_pii=self.redact_pii)
         if not guard_in.allowed:
             # Logged, so a blocked attempt is visible rather than merely refused.
-            blocked = Response(text="", model="", provider="", tenant=req.tenant,
-                               blocked_reason=", ".join(guard_in.findings))
+            blocked = Response(
+                text="",
+                model="",
+                provider="",
+                tenant=req.tenant,
+                blocked_reason=", ".join(guard_in.findings),
+            )
             self.log.append(blocked)
             raise Blocked("request blocked by input guardrails", guard_in.findings)
 
@@ -82,7 +87,9 @@ class Gateway:
                 attempted.append(f"{model}(no provider)")
                 continue
             try:
-                text, usage = provider.complete(Request(**{**req.__dict__, "prompt": prompt}), model)
+                text, usage = provider.complete(
+                    Request(**{**req.__dict__, "prompt": prompt}), model
+                )
             except ProviderError as exc:
                 # Failing over rather than retrying the same provider: a provider that
                 # is down or rate-limiting will still be down on an immediate retry.
@@ -98,9 +105,7 @@ class Gateway:
 
             self.budgets.record(req.tenant, response.usage.usd)
             if req.use_cache:
-                self.cache.put(
-                    cache_key(prompt, req.system, model, req.max_tokens), response
-                )
+                self.cache.put(cache_key(prompt, req.system, model, req.max_tokens), response)
             self.log.append(response)
             return response
 
@@ -120,11 +125,19 @@ class Gateway:
             "total_usd": round(spend, 6),
             "usd_per_request": round(spend / len(served), 8) if served else 0.0,
             "by_model": by_model,
-            "fallback_rate": round(
-                sum(1 for r in served if r.fallbacks) / len(served), 4
-            ) if served else 0.0,
+            "fallback_rate": round(sum(1 for r in served if r.fallbacks) / len(served), 4)
+            if served
+            else 0.0,
         }
 
 
-__all__ = ["AllProvidersFailed", "Blocked", "BudgetExceeded", "Gateway",
-           "RateLimitExceeded", "Request", "Response", "Usage"]
+__all__ = [
+    "AllProvidersFailed",
+    "Blocked",
+    "BudgetExceeded",
+    "Gateway",
+    "RateLimitExceeded",
+    "Request",
+    "Response",
+    "Usage",
+]

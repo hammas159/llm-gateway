@@ -36,12 +36,21 @@ PII_PATTERNS: list[tuple[str, re.Pattern]] = [
 ]
 
 INJECTION_PATTERNS: list[tuple[str, re.Pattern]] = [
-    ("instruction_override", re.compile(
-        r"\bignore\s+(all\s+)?(previous|prior|above)\s+(instructions?|prompts?)\b", re.I)),
+    (
+        "instruction_override",
+        re.compile(
+            r"\bignore\s+(all\s+)?(previous|prior|above)\s+(instructions?|prompts?)\b", re.I
+        ),
+    ),
     ("role_override", re.compile(r"\byou\s+are\s+now\s+(a|an|in)\b", re.I)),
-    ("system_prompt_exfil", re.compile(
-        r"\b(reveal|repeat|print|show|output)\s+(your|the)\s+"
-        r"(system\s+prompt|instructions|rules)\b", re.I)),
+    (
+        "system_prompt_exfil",
+        re.compile(
+            r"\b(reveal|repeat|print|show|output)\s+(your|the)\s+"
+            r"(system\s+prompt|instructions|rules)\b",
+            re.I,
+        ),
+    ),
     ("delimiter_injection", re.compile(r"(<\|im_start\|>|<\|endoftext\|>|\[INST\])", re.I)),
     ("developer_mode", re.compile(r"\b(dev|developer|god|jailbreak)\s*mode\b", re.I)),
 ]
@@ -67,7 +76,10 @@ def _redact(text: str, patterns: list[tuple[str, re.Pattern]], findings: list[st
 
 
 def check_input(
-    text: str, *, redact_secrets: bool = True, redact_pii: bool = False,
+    text: str,
+    *,
+    redact_secrets: bool = True,
+    redact_pii: bool = False,
     block_injection: bool = True,
 ) -> GuardResult:
     findings: list[str] = []

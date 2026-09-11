@@ -23,8 +23,12 @@ _WS = re.compile(r"\s+")
 
 def cache_key(prompt: str, system: str, model: str, max_tokens: int) -> str:
     canonical = "\x00".join(
-        (_WS.sub(" ", prompt.strip().lower()), _WS.sub(" ", system.strip().lower()),
-         model, str(max_tokens))
+        (
+            _WS.sub(" ", prompt.strip().lower()),
+            _WS.sub(" ", system.strip().lower()),
+            model,
+            str(max_tokens),
+        )
     )
     return hashlib.sha256(canonical.encode()).hexdigest()
 
@@ -59,7 +63,7 @@ class ResponseCache:
         cached = Response(**{**entry.response.__dict__})
         cached.cached = True
         cached.usage.usd = 0.0  # a cache hit costs nothing; reporting otherwise
-        return cached          # would inflate every spend figure
+        return cached  # would inflate every spend figure
 
     def put(self, key: str, response: Response) -> None:
         if len(self._entries) >= self.max_entries:
@@ -75,5 +79,9 @@ class ResponseCache:
         return round(self.hits / total, 4) if total else 0.0
 
     def stats(self) -> dict:
-        return {"entries": len(self._entries), "hits": self.hits,
-                "misses": self.misses, "hit_rate": self.hit_rate}
+        return {
+            "entries": len(self._entries),
+            "hits": self.hits,
+            "misses": self.misses,
+            "hit_rate": self.hit_rate,
+        }

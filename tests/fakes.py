@@ -16,9 +16,16 @@ from gateway.types import Request, Usage
 
 
 class FakeProvider(Provider):
-    def __init__(self, name: str, models: dict[str, tuple[float, float]],
-                 *, fail: bool = False, rate_limited: bool = False,
-                 delay: float = 0.0, reply: str = "ok") -> None:
+    def __init__(
+        self,
+        name: str,
+        models: dict[str, tuple[float, float]],
+        *,
+        fail: bool = False,
+        rate_limited: bool = False,
+        delay: float = 0.0,
+        reply: str = "ok",
+    ) -> None:
         self.name = name
         self.models = models
         self.fail = fail

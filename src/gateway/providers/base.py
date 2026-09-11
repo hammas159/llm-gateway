@@ -42,6 +42,4 @@ class Provider(ABC):
 
     def make_response(self, req: Request, model: str, text: str, usage: Usage) -> Response:
         usage.usd = self.price(model, usage)
-        return Response(
-            text=text, model=model, provider=self.name, usage=usage, tenant=req.tenant
-        )
+        return Response(text=text, model=model, provider=self.name, usage=usage, tenant=req.tenant)

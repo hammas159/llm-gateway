@@ -77,8 +77,7 @@ class TestFallback:
         assert limited.calls == 1
 
     def test_every_provider_failing_raises_with_the_attempt_list(self):
-        g = Gateway(providers=[local_small(fail=True), local_large(fail=True),
-                               frontier(fail=True)])
+        g = Gateway(providers=[local_small(fail=True), local_large(fail=True), frontier(fail=True)])
         with pytest.raises(AllProvidersFailed) as exc:
             g.complete(Request(prompt="hi"))
         assert len(exc.value.attempts) == 3
@@ -200,15 +199,17 @@ class TestBudgets:
 
 class TestModelAllowlist:
     def test_allowlist_overrides_the_router(self):
-        g = gw(budgets=BudgetManager(
-            default=TenantPolicy(allowed_models=frozenset({"local-small"}))))
+        g = gw(
+            budgets=BudgetManager(default=TenantPolicy(allowed_models=frozenset({"local-small"})))
+        )
         r = g.complete(Request(prompt="Analyse the architecture trade-offs and refactor"))
         assert r.model == "local-small"
 
     def test_a_restricted_tenant_can_still_ask_hard_questions(self):
         """Refusing here would mean a tenant on a small model cannot ask anything hard."""
-        g = gw(budgets=BudgetManager(
-            default=TenantPolicy(allowed_models=frozenset({"local-large"}))))
+        g = gw(
+            budgets=BudgetManager(default=TenantPolicy(allowed_models=frozenset({"local-large"})))
+        )
         assert g.complete(Request(prompt="Prove this step-by-step")).model == "local-large"
 
     def test_an_unknown_permitted_model_fails_loudly(self):
@@ -216,7 +217,8 @@ class TestModelAllowlist:
         g = Gateway(
             providers=[local_small()],
             budgets=BudgetManager(
-                default=TenantPolicy(allowed_models=frozenset({"gpt-nonexistent"}))),
+                default=TenantPolicy(allowed_models=frozenset({"gpt-nonexistent"}))
+            ),
         )
         with pytest.raises(ValueError):
             g.complete(Request(prompt="hi"))
