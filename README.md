@@ -1,4 +1,4 @@
-# llm-gateway
+# llm-gateway (FastAPI, Pydantic, Anthropic)
 
 [![ci](https://github.com/hammas159/llm-gateway/actions/workflows/ci.yml/badge.svg)](https://github.com/hammas159/llm-gateway/actions/workflows/ci.yml)
 ![python](https://img.shields.io/badge/python-3.12-blue)
