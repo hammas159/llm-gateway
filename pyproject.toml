@@ -4,11 +4,9 @@ version = "0.1.0"
 description = "One entry point for every LLM call: routing, budgets, rate limits, fallback, caching, guardrails."
 readme = "README.md"
 requires-python = ">=3.12,<3.13"
-dependencies = [
-    "fastapi>=0.115", "uvicorn[standard]>=0.32",
-    "pydantic>=2.9", "pydantic-settings>=2.6", "httpx>=0.28",
-    "rich>=13.9", "typer>=0.15",
-]
+# httpx is the only runtime dependency: it is what the real Ollama / Anthropic /
+# HuggingFace providers call out with. Everything else here is stdlib.
+dependencies = ["httpx>=0.28"]
 
 [project.optional-dependencies]
 anthropic = ["anthropic>=0.40"]

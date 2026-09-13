@@ -27,12 +27,16 @@ SECRET_PATTERNS: list[tuple[str, re.Pattern]] = [
     ("jwt", re.compile(r"\beyJ[A-Za-z0-9_\-]{10,}\.[A-Za-z0-9_\-]{10,}\.[A-Za-z0-9_\-]{10,}\b")),
 ]
 
+# Order matters: patterns are applied in sequence and the first to match claims the
+# text, so the specific ones must precede the general one. A CNIC is 13 digits with
+# separators, which the credit-card pattern also matches - leaving it second would
+# redact a national ID and report it to a compliance audit as a card number.
 PII_PATTERNS: list[tuple[str, re.Pattern]] = [
     ("email", re.compile(r"\b[\w.%-]+@[\w.-]+\.[A-Za-z]{2,}\b")),
-    ("credit_card", re.compile(r"\b(?:\d[ -]?){13,19}\b")),
     # Pakistani CNIC: 5 digits - 7 digits - 1 digit.
     ("cnic", re.compile(r"\b\d{5}-\d{7}-\d\b")),
     ("phone_pk", re.compile(r"\b(?:\+92|0)3\d{2}[- ]?\d{7}\b")),
+    ("credit_card", re.compile(r"\b(?:\d[ -]?){13,19}\b")),
 ]
 
 INJECTION_PATTERNS: list[tuple[str, re.Pattern]] = [

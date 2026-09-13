@@ -161,6 +161,17 @@ class TestGuardrails:
         out = check_input("my cnic is 35202-1234567-1", redact_pii=True)
         assert "35202-1234567-1" not in out.text
 
+    def test_cnic_is_reported_as_a_cnic_not_a_card(self):
+        """A CNIC is 13 digits with separators, so the credit-card pattern matches it
+        too. Asserting only that the digits are gone passes either way - and did,
+        while every CNIC was being reported to a compliance audit as a card number."""
+        out = check_input("my cnic is 35202-1234567-1", redact_pii=True)
+        assert out.findings == ["redacted:cnic"]
+
+    def test_a_real_card_number_is_still_reported_as_a_card(self):
+        out = check_input("card 4111-1111-1111-1111", redact_pii=True)
+        assert out.findings == ["redacted:credit_card"]
+
     def test_ordinary_prompts_pass_untouched(self):
         result = check_input("What is the capital of Pakistan?")
         assert result.allowed and not result.findings

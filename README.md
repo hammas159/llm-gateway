@@ -1,4 +1,4 @@
-# llm-gateway (FastAPI, Pydantic, Anthropic)
+# llm-gateway (Python, httpx, optional Streamlit demo)
 
 [![ci](https://github.com/hammas159/llm-gateway/actions/workflows/ci.yml/badge.svg)](https://github.com/hammas159/llm-gateway/actions/workflows/ci.yml)
 ![python](https://img.shields.io/badge/python-3.12-blue)
@@ -89,7 +89,7 @@ UTC is a limit that can be doubled at 23:59.
 
 ## Testing
 
-**42 tests, no API key, no network, no model.**
+**51 tests (44 core + 7 for the optional Streamlit demo), no API key, no network, no model.**
 
 Everything worth testing in a gateway is a *provider behaviour* — succeeding, failing,
 rate-limiting, being expensive. Faking the providers makes the entire policy layer
@@ -155,7 +155,7 @@ git clone https://github.com/hammas159/llm-gateway
 cd llm-gateway
 
 uv sync --all-groups     # or: pip install -e ".[dev]"
-make test                # 42 tests, no API key, no network, no model
+make test                # 51 tests, no API key, no network, no model
 ```
 
 Every test runs against fake providers, so a reviewer can verify the whole policy layer
@@ -176,6 +176,20 @@ gateway.complete(Request(prompt="Analyse this architecture..."))  # -> frontier
 gateway.stats()   # cost per model, cache hit rate, fallback rate
 ```
 
+### The demo dashboard (`ui` dependency group)
+
+`pyproject.toml` has declared a `streamlit` + `pandas` `ui` group since the repo's
+first commit; this is the actual demo that group was for. Three tabs: send a prompt
+and see which tier the router picked (and watch it fail over when you tick "local-small
+is down"), paste a secret or an injection attempt and see exactly what would have left
+the building, and a per-tenant spend view built from the gateway's own log. Uses the
+same fake providers the tests use — no API key, no network.
+
+```bash
+uv sync --group ui        # or: pip install streamlit pandas
+streamlit run ui/app.py
+```
+
 ## Problems hit while building this
 
 **A tenant restricted to one model could not ask a hard question at all.** The router
@@ -193,3 +207,23 @@ good way to serve a confidently wrong answer — *"is X safe for children"* and 
 safe for adults"* embed almost identically and need opposite replies. The cache
 normalises whitespace and case only, and a cache hit is recorded at **zero cost**,
 because reporting the original price on a hit inflates every spend figure in the system.
+
+**Every Pakistani CNIC was being reported to a compliance audit as a credit card.**
+Found by building the demo above and clicking the CNIC sample. A CNIC is 13 digits with
+separators, so `credit_card`'s `(?:\d[ -]?){13,19}` matches it too — and it sat *before*
+`cnic` in `PII_PATTERNS`, so it claimed the match first. The data was still redacted, so
+nothing leaked; the *label* was wrong, which is the part a data-protection report is
+made of.
+
+The existing test could not catch it, and that is the more useful half of the lesson:
+
+```python
+def test_cnic_is_recognised(self):
+    out = check_input("my cnic is 35202-1234567-1", redact_pii=True)
+    assert "35202-1234567-1" not in out.text      # passes either way
+```
+
+It asserted the digits were *gone*, which is true whichever pattern fired. *Fixed* by
+ordering specific patterns before general ones, and by asserting the finding label
+(`out.findings == ["redacted:cnic"]`) rather than just the absence of the text — the
+version of the test that actually fails against the old code.
