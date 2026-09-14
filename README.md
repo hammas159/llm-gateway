@@ -1,16 +1,48 @@
-# llm-gateway (Python, httpx, optional Streamlit demo)
+<h1 align="center">llm-gateway</h1>
+<p align="center"><i>Limits enforced before the request leaves, not reconciled after the bill arrives</i></p>
 
-[![ci](https://github.com/hammas159/llm-gateway/actions/workflows/ci.yml/badge.svg)](https://github.com/hammas159/llm-gateway/actions/workflows/ci.yml)
-![python](https://img.shields.io/badge/python-3.12-blue)
-![license](https://img.shields.io/badge/license-MIT-green)
+<p align="center">
+  <a href="#the-order-is-the-design">The order is the design</a> &middot;
+  <a href="#routing-is-where-the-money-is">Routing</a> &middot;
+  <a href="#guardrails-redaction-matters-more-than-blocking">Guardrails</a> &middot;
+  <a href="#caching-is-exact-match-deliberately">Caching</a> &middot;
+  <a href="#budgets-are-checked-before-the-call">Budgets</a> &middot;
+  <a href="#problems-hit-while-building-this">Problems hit</a>
+</p>
 
-**One entry point for every LLM call in a company.** Routing, per-tenant budgets, rate
-limits, fallback chains, caching, and guardrails — enforced before the request leaves,
-not reconciled after the bill arrives.
+<p align="center">
+  <a href="https://github.com/hammas159/llm-gateway/actions/workflows/ci.yml"><img src="https://github.com/hammas159/llm-gateway/actions/workflows/ci.yml/badge.svg" alt="ci"></a>
+  <img src="https://img.shields.io/badge/python-3.11%2B-blue" alt="python">
+  <img src="https://img.shields.io/badge/runtime%20deps-1%20(httpx)-success" alt="deps">
+  <img src="https://img.shields.io/badge/stack-httpx%20%C2%B7%20Streamlit-orange" alt="stack">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green" alt="license"></a>
+</p>
 
 ---
 
 ## The order is the design
+
+```mermaid
+flowchart LR
+    R["request"] --> G["guardrails<br/>redact PII"]
+    G --> C{"cache hit?"}
+    C -->|"yes"| H["return cached"]
+    C -->|"no"| B{"within budget?"}
+    B -->|"no"| X["refuse"]
+    B -->|"yes"| RT["route to a provider"]
+    RT --> P["provider call"]
+    P -->|"fails"| FB["fallback chain"]
+    FB --> P
+    P --> OUT["response"]
+
+    style X fill:#dc2626,color:#fff
+    style H fill:#16a34a,color:#fff
+```
+
+**The order is the design.** Redaction happens before caching, so a cache key never contains
+PII. The budget is checked before the call, not after it - which is the difference between a
+limit and a report.
+
 
 ```
 guardrails(in) → budget → cache → route → call with fallback → guardrails(out) → record
@@ -141,6 +173,10 @@ tests/fakes.py          providers that fail, rate-limit, and cost money on deman
 - Injection patterns catch common phrasings, not novel attacks. They are a filter, not
   a guarantee — which is why redaction, not blocking, is the control that carries the
   weight here.
+
+## Keywords
+
+LLM gateway &middot; API gateway &middot; rate limiting &middot; budget enforcement &middot; cost control &middot; PII redaction &middot; guardrails &middot; prompt injection &middot; fallback chains &middot; provider routing &middot; response caching &middot; LLMOps &middot; observability &middot; httpx &middot; Streamlit &middot; production LLM &middot; token accounting
 
 ## License
 
