@@ -212,19 +212,23 @@ gateway.complete(Request(prompt="Analyse this architecture..."))  # -> frontier
 gateway.stats()   # cost per model, cache hit rate, fallback rate
 ```
 
-### The demo dashboard (`ui` dependency group)
+### Input / Output
 
-`pyproject.toml` has declared a `streamlit` + `pandas` `ui` group since the repo's
-first commit; this is the actual demo that group was for. Three tabs: send a prompt
-and see which tier the router picked (and watch it fail over when you tick "local-small
-is down"), paste a secret or an injection attempt and see exactly what would have left
-the building, and a per-tenant spend view built from the gateway's own log. Uses the
-same fake providers the tests use — no API key, no network.
+![input](docs/images/input.png)
 
-```bash
-uv sync --group ui        # or: pip install streamlit pandas
-streamlit run ui/app.py
-```
+`python demo.py`
+
+![output](docs/images/output.png)
+
+Five behaviours in one run: the router sends an easy question to `local-small` and a hard
+one to `frontier`, the repeated question is served from cache, the secret is redacted
+before it leaves the process, and the injection attempt is blocked.
+
+The blocked request is still written to the gateway's log. A refusal nobody can see is
+indistinguishable from a request that never arrived.
+
+Uses the same fake providers the tests use — no API key, no network, but real prices, so
+the $0.084 is the actual cost of that one routing decision.
 
 ## Problems hit while building this
 
