@@ -1,4 +1,4 @@
-<h1 align="center">llm-gateway</h1>
+<h1 align="center">llm-gateway (Python · httpx · Anthropic API)</h1>
 <p align="center"><i>Limits enforced before the request leaves, not reconciled after the bill arrives</i></p>
 
 <p align="center">
